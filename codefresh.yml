@@ -1,0 +1,65 @@
+version: '1.0'
+
+stages:
+  setup: {}
+  scan: {}
+
+steps:
+  displayVariables:
+    title: 'Display Environment Variables'
+    stage: 'setup'
+    image: 'alpine:latest'
+    environment:
+      PRIVADO_DOCKER_IMAGE: '638117407428.dkr.ecr.eu-west-1.amazonaws.com/scanner-agent:latest'
+      PRIVADO_API_HOST: 'https://api.code.privado.ai/prod'
+      PRIVADO_API_TOKEN: 'api2add454416de00fd0cbfcf5039f54e5ed7719d59117bfd6ab6'
+      PRIVADO_API_ID: 'd26a3954-e728-485a-be84-cf2cb94dc24a'
+      PRIVADO_CI_PLATFORM: 'CUSTOM'
+      PRIVADO_REPOSITORY_ID: '${{CF_REPO_ID}}'
+      PRIVADO_REPOSITORY_NAME: '${{CF_REPO_NAME}}'
+      PRIVADO_COMMIT_ID: '${{CF_REVISION}}'
+      PRIVADO_BRANCH_NAME: '${{CF_BRANCH}}'
+      PRIVADO_DEFAULT_BRANCH_NAME: '${{CF_DEFAULT_BRANCH}}'
+      PRIVADO_REPOSITORY_URL: '${{CF_REPO_CLONE_URL}}'
+      Build_SourcesDirectory: '/codefresh/volume'
+    commands:
+      - echo "PRIVADO_DOCKER_IMAGE: $PRIVADO_DOCKER_IMAGE"
+      - echo "PRIVADO_API_TOKEN: $PRIVADO_API_TOKEN"
+      - echo "PRIVADO_API_ID: $PRIVADO_API_ID"
+      - echo "PRIVADO_API_HOST: $PRIVADO_API_HOST"
+      - echo "PRIVADO_CI_PLATFORM: $PRIVADO_CI_PLATFORM"
+      - echo "PRIVADO_REPOSITORY_ID: $PRIVADO_REPOSITORY_ID"
+      - echo "PRIVADO_REPOSITORY_NAME: $PRIVADO_REPOSITORY_NAME"
+      - echo "PRIVADO_COMMIT_ID: $PRIVADO_COMMIT_ID"
+      - echo "PRIVADO_BRANCH_NAME: $PRIVADO_BRANCH_NAME"
+      - echo "PRIVADO_DEFAULT_BRANCH_NAME: $PRIVADO_DEFAULT_BRANCH_NAME"
+      - echo "PRIVADO_REPOSITORY_URL: $PRIVADO_REPOSITORY_URL"
+      - echo "Build_SourcesDirectory: $Build_SourcesDirectory"
+
+  fetchDockerTokenAndLogin:
+    title: 'Fetch Docker Registry Token and Login'
+    stage: 'setup'
+    image: 'curlimages/curl:latest'
+    commands:
+      - |
+        curl -s -H "Content-Type: application/json" \
+        -H "Authorization: Token $PRIVADO_API_TOKEN" \
+        -H "idt: $PRIVADO_API_TOKEN" \
+        -H "data-url: /ce/integrations/customers/$PRIVADO_API_ID/docker-registry-token" \
+        "$PRIVADO_API_HOST/ce/integrations/customers/$PRIVADO_API_ID/docker-registry-token?ci=true" \
+        | docker login --username AWS --password-stdin $PRIVADO_DOCKER_IMAGE
+
+  runDockerImage:
+    title: 'Run Docker Image'
+    stage: 'scan'
+    image: 'docker:latest'
+    environment:
+      Build_SourcesDirectory: '/codefresh/volume'
+    commands:
+      - printenv | grep 'PRIVADO_' > .privado.env
+      - |
+        docker run -t \
+        -v $Build_SourcesDirectory:/privado \
+        --pull=always \
+        --env-file .privado.env \
+        --privileged $PRIVADO_DOCKER_IMAGE
