@@ -12,8 +12,8 @@ steps:
     environment:
       PRIVADO_DOCKER_IMAGE: '638117407428.dkr.ecr.eu-west-1.amazonaws.com/scanner-agent:latest'
       PRIVADO_API_HOST: 'https://api.code.privado.ai/prod'
-      PRIVADO_API_TOKEN: 'api2add454416de00fd0cbfcf5039f54e5ed7719d59117bfd6ab6'
-      PRIVADO_API_ID: 'd26a3954-e728-485a-be84-cf2cb94dc24a'
+      PRIVADO_API_TOKEN: 'api9ec36d63a7714d66c12bf03fde41eaa8691f403d3ae64d4bee'
+      PRIVADO_API_ID: 'f0662d32-cf19-40d7-b878-588eb0c02daf'
       PRIVADO_CI_PLATFORM: 'CUSTOM'
       PRIVADO_REPOSITORY_ID: '${{CF_REPO_ID}}'
       PRIVADO_REPOSITORY_NAME: '${{CF_REPO_NAME}}'
